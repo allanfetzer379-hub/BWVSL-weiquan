@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>案件管理｜台灣網路詐騙維權中心</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #152b52;
+      --blue: #234e9c;
+      --ink: #1c2e49;
+      --muted: #4f6280;
+      --line: #dae3ee;
+      --paper: #f4f7fb;
+      --gold: #f0ce89;
+      --danger: #922d24;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px/1.55 "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+    }
+    a { color: var(--blue); }
+    :focus-visible { outline: 3px solid #557dd0; outline-offset: 3px; }
+    h1, h2, p { margin: 0; }
+    h1, h2 { line-height: 1.25; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.15rem); }
+    h2 { font-size: 1.3rem; }
+    .bar { background: var(--navy); color: white; }
+    .shell { width: min(1150px, calc(100% - 32px)); margin-inline: auto; }
+    .bar .shell, .console-head, .toolbar, .pages, .dialog-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .bar .shell { min-height: 66px; padding-block: 10px; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: white;
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .brand svg { width: 26px; height: 26px; color: var(--gold); flex: none; }
+    main { padding-block: clamp(20px, 5vw, 45px); }
+    .panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: clamp(15px, 3vw, 27px);
+      box-shadow: 0 9px 32px #152b520c;
+    }
+    .login { max-width: 450px; margin-inline: auto; }
+    .subtle { color: var(--muted); font-size: .9rem; }
+    .login .subtle, .fields, .toolbar, .table-title, .pages { margin-top: 13px; }
+    .fields { display: grid; gap: 12px; }
+    .field { min-width: 0; }
+    .field label { display: block; margin-bottom: 5px; font-weight: 750; }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #becde1;
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: var(--ink);
+      background: white;
+    }
+    input, select, button { min-height: 44px; }
+    textarea { resize: vertical; }
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .primary { color: white; background: var(--blue); }
+    .primary:hover:not(:disabled) { background: #173e86; }
+    .secondary { color: var(--blue); background: white; border-color: #bdcce2; }
+    .secondary:hover:not(:disabled) { background: #edf3ff; }
+    .button:disabled { opacity: .55; cursor: default; }
+    .login .primary { width: 100%; }
+    .warning, .status-text { margin-top: 11px; }
+    .warning { color: var(--danger); font-weight: 700; }
+    .status-text { color: #175b38; }
+    .status-text:empty, .warning:empty { display: none; }
+    .console-head { align-items: flex-start; }
+    .console-head p { margin-top: 5px; word-break: break-word; }
+    .toolbar { justify-content: flex-start; align-items: end; margin-block: 18px; }
+    .search { flex: 2 1 215px; }
+    .status-filter { flex: 1 1 145px; max-width: 245px; }
+    .toolbar-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .table-title { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .table-frame { margin-top: 11px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: .86rem; }
+    tbody tr:hover { background: #f7faff; }
+    td { vertical-align: middle; font-size: .9rem; overflow-wrap: anywhere; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #eaf1ff;
+      color: #174792;
+      font-size: .8rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .status-pill[data-status="in_review"], .status-pill[data-status="contacted"] { color: #68490e; background: #fff3cc; }
+    .status-pill[data-status="line_added"], .status-pill[data-status="closed"] { color: #175633; background: #dff5e8; }
+    .status-pill[data-status="invalid"] { color: #7f3029; background: #fbeae7; }
+    .table-button { white-space: nowrap; }
+    .empty { padding: 19px 0; color: var(--muted); }
+    .pages .subtle { margin-right: auto; }
+    dialog {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: clamp(16px, 4vw, 26px);
+      width: min(530px, calc(100% - 24px));
+      max-height: calc(100dvh - 24px);
+    }
+    dialog::backdrop { background: #0d193bb0; }
+    .details { margin: 12px 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+    .details dt { font-weight: 750; }
+    .details dd { margin: 0; overflow-wrap: anywhere; }
+    .dialog-actions { justify-content: end; margin-top: 15px; }
+    @media (max-width: 780px) {
+      .table-frame table, .table-frame tbody { display: block; }
+      .table-frame thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .table-frame tbody { display: grid; gap: 9px; }
+      .table-frame tr { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+      .table-frame td { display: block; border: 0; padding: 4px 5px; }
+      .table-frame td[data-label]::before { display: block; content: attr(data-label); font-size: .77rem; color: var(--muted); }
+      .table-frame .row-actions { grid-column: 1 / -1; }
+      .table-button { width: 100%; }
+    }
+    @media (max-width: 380px) {
+      .shell { width: calc(100% - 24px); }
+      .toolbar-actions .button { width: 100%; }
+      .toolbar-actions { flex: 1 0 100%; }
+    }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./config.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <div class="shell">
+      <a class="brand" href="./index.html">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M16 3 27 7v8c0 6-4 10-11 14C9 25 5 21 5 15V7l11-4Z"/>
+          <path d="m11 16 4 4 7-8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        台灣網路詐騙維權中心
+      </a>
+      <button type="button" class="button secondary" id="logout" hidden>登出</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="panel login" id="login-panel" aria-labelledby="login-title">
+      <h1 id="login-title">案件管理登入</h1>
+      <p class="subtle">請使用已獲授權的工作人員帳號登入。</p>
+      <form class="fields" id="login-form" method="post">
+        <div class="field">
+          <label for="email">電子郵件</label>
+          <input id="email" type="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">密碼</label>
+          <input id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="button primary" id="login-button" disabled>登入</button>
+      </form>
+      <p class="warning" id="login-message" role="alert"></p>
+      <noscript><p class="warning">請啟用 JavaScript 後登入。</p></noscript>
+    </section>
+
+    <section class="panel" id="workspace" aria-labelledby="workspace-title" hidden>
+      <header class="console-head">
+        <div>
+          <h1 id="workspace-title" tabindex="-1">案件管理</h1>
+          <p class="subtle" id="operator"></p>
+        </div>
+      </header>
+
+      <form class="toolbar" id="case-filter">
+        <div class="field search">
+          <label for="search">搜尋案件</label>
+          <input id="search" type="search" placeholder="案件編號、稱呼或聯絡電話" maxlength="64" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="field status-filter">
+          <label for="filter-status">處理狀態</label>
+          <select id="filter-status"><option value="">全部狀態</option></select>
+        </div>
+        <div class="toolbar-actions">
+          <button type="submit" class="button primary">搜尋</button>
+          <button type="button" class="button secondary" id="reload">重新整理</button>
+          <button type="button" class="button secondary" id="export" disabled>匯出本頁 CSV</button>
+        </div>
+      </form>
+
+      <div class="table-title">
+        <h2 id="list-title">案件列表</h2>
+        <span class="subtle" id="row-count" role="status"></span>
+      </div>
+      <p class="warning" id="list-error" role="alert"></p>
+      <p class="status-text" id="save-announcement" role="status"></p>
+      <div class="table-frame">
+        <table id="case-table" aria-labelledby="list-title" role="table">
+          <thead role="rowgroup"><tr role="row">
+            <th scope="col" role="columnheader">案件編號</th>
+            <th scope="col" role="columnheader">收件時間</th>
+            <th scope="col" role="columnheader">稱呼</th>
+            <th scope="col" role="columnheader">聯絡電話</th>
+            <th scope="col" role="columnheader">受騙金額</th>
+            <th scope="col" role="columnheader">處理狀態</th>
+            <th scope="col" role="columnheader">案件操作</th>
+          </tr></thead>
+          <tbody id="cases" role="rowgroup"></tbody>
+        </table>
+        <p class="empty" id="list-empty" hidden>沒有符合條件的案件。</p>
+      </div>
+      <nav class="pages" aria-label="案件頁次">
+        <span class="subtle" id="pagination"></span>
+        <button type="button" class="button secondary" id="previous" disabled>上一頁</button>
+        <button type="button" class="button secondary" id="next" disabled>下一頁</button>
+      </nav>
+    </section>
+  </main>
+
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="editor-form">
+      <h2 id="editor-title">編輯案件</h2>
+      <dl class="details">
+        <dt>案件編號</dt><dd id="detail-case-number"></dd>
+        <dt>收件時間</dt><dd id="detail-created-at"></dd>
+        <dt>稱呼</dt><dd id="detail-name"></dd>
+        <dt>聯絡電話</dt><dd id="detail-phone"></dd>
+        <dt>受騙金額</dt><dd id="detail-amount"></dd>
+      </dl>
+      <div class="fields">
+        <div class="field">
+          <label for="case-status">處理狀態</label>
+          <select id="case-status" required></select>
+        </div>
+        <div class="field">
+          <label for="case-note">內部備註</label>
+          <textarea id="case-note" maxlength="2000" rows="4"></textarea>
+        </div>
+      </div>
+      <p id="save-error" class="warning" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="button secondary" id="close-editor">關閉</button>
+        <button type="submit" class="button primary" id="save">儲存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      "use strict";
+      const byId = (id) => document.getElementById(id);
+      const statusNames = {
+        new: "待聯絡",
+        contacted: "已聯絡",
+        line_added: "已加入 LINE",
+        in_review: "處理中",
+        closed: "已結案",
+        invalid: "無效案件"
+      };
+      const pageSize = 25;
+      const dateFormat = new Intl.DateTimeFormat("zh-Hant-TW", {
+        dateStyle: "short", timeStyle: "short", timeZone: "Asia/Taipei"
+      });
+      const tableName = "wei_quan_cases";
+      const columnNames = "id,case_number,created_at,name,phone,amount,status,note";
+      const loginPanel = byId("login-panel");
+      const loginButton = byId("login-button");
+      const loginMessage = byId("login-message");
+      const workspace = byId("workspace");
+      const logout = byId("logout");
+      const table = byId("case-table");
+      const body = byId("cases");
+      const editor = byId("editor");
+      const save = byId("save");
+      const exportButton = byId("export");
+      const previous = byId("previous");
+      const next = byId("next");
+      const filterStatus = byId("filter-status");
+      const caseStatus = byId("case-status");
+      const note = byId("case-note");
+      const closeEditor = byId("close-editor");
+      const caseDate = (value) => value ? dateFormat.format(new Date(value)) : "—";
+      const isStaff = (user) => user?.app_metadata?.wei_quan_admin === true;
+
+      let staff = null;
+      let cases = [];
+      let selectedCase = null;
+      let page = 0;
+      let listRequest = 0;
+
+      for (const [value, label] of Object.entries(statusNames)) {
+        filterStatus.add(new Option(label, value));
+        caseStatus.add(new Option(label, value));
+      }
+
+      const config = window.WEIQUAN_CONFIG;
+      const supabaseUrl = typeof config?.supabaseUrl === "string" ? config.supabaseUrl.trim().replace(/\/$/, "") : "";
+      const publishableKey = typeof config?.publishableKey === "string" ? config.publishableKey.trim() : "";
+      const validUrl = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(supabaseUrl);
+      if (!validUrl || !publishableKey.startsWith("sb_publishable_")) {
+        loginMessage.textContent = "尚未設定案件管理服務，請聯絡網站管理人員。";
+        return;
+      }
+      if (!window.supabase?.createClient) {
+        loginMessage.textContent = "登入元件目前無法載入，請確認網路連線後重新整理。";
+        return;
+      }
+
+      let client;
+      try {
+        client = window.supabase.createClient(supabaseUrl, publishableKey, {
+          auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: false }
+        });
+      } catch {
+        loginMessage.textContent = "案件管理服務的設定無法使用，請聯絡網站管理人員。";
+        return;
+      }
+
+      function clearWorkspace() {
+        ++listRequest;
+        staff = null;
+        cases = [];
+        selectedCase = null;
+        page = 0;
+        body.replaceChildren();
+        workspace.hidden = true;
+        logout.hidden = true;
+        loginPanel.hidden = false;
+        byId("operator").textContent = "";
+        byId("save-announcement").textContent = "";
+        byId("login-form").reset();
+        byId("case-filter").reset();
+        for (const id of ["detail-case-number", "detail-created-at", "detail-name", "detail-phone", "detail-amount"]) {
+          byId(id).textContent = "";
+        }
+        byId("save-error").textContent = "";
+        byId("editor-form").reset();
+        if (editor.open) editor.close();
+      }
+
+      client.auth.onAuthStateChange((event, session) => {
+        if (!staff) return;
+        if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !isStaff(session?.user))) {
+          clearWorkspace();
+          loginMessage.textContent = "登入狀態已結束，請重新登入。";
+        }
+      });
+
+      byId("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (loginButton.disabled) return;
+        loginButton.disabled = true;
+        loginButton.textContent = "登入中⋯";
+        loginMessage.textContent = "";
+        try {
+          const { data, error } = await client.auth.signInWithPassword({
+            email: byId("email").value.trim(),
+            password: byId("password").value
+          });
+          if (error || !data?.session) throw new Error("登入失敗");
+          if (!isStaff(data.user)) {
+            await client.auth.signOut({ scope: "local" });
+            loginMessage.textContent = "此帳號尚未取得案件管理權限。";
+            return;
+          }
+          staff = data.user;
+          loginPanel.hidden = true;
+          workspace.hidden = false;
+          logout.hidden = false;
+          byId("operator").textContent = data.user.email || "已登入";
+          byId("workspace-title").focus();
+          await loadCases();
+        } catch {
+          loginMessage.textContent = "登入失敗，請確認電子郵件與密碼後再試一次。";
+        } finally {
+          byId("password").value = "";
+          loginButton.disabled = false;
+          loginButton.textContent = "登入";
+        }
+      });
+      loginButton.disabled = false;
+
+      logout.addEventListener("click", async () => {
+        loginButton.disabled = true;
+        clearWorkspace();
+        try {
+          const { error } = await client.auth.signOut({ scope: "local" });
+          loginMessage.textContent = error ? "連線發生問題。工作畫面已關閉，請重新整理後再登入。" : "";
+        } catch {
+          loginMessage.textContent = "連線發生問題。工作畫面已關閉，請重新整理後再登入。";
+        } finally {
+          loginButton.disabled = false;
+          byId("email").focus();
+        }
+      });
+
+      async function loadCases() {
+        if (!staff) return;
+        const sequence = ++listRequest;
+        const countLabel = byId("row-count");
+        const listError = byId("list-error");
+        const empty = byId("list-empty");
+        listError.textContent = "";
+        countLabel.textContent = "載入中⋯";
+        table.setAttribute("aria-busy", "true");
+        empty.hidden = true;
+        previous.disabled = true;
+        next.disabled = true;
+        exportButton.disabled = true;
+
+        const search = byId("search").value.normalize("NFKC").trim();
+        const cleanSearch = search.replace(/[^\p{L}\p{M}\p{N} +#@'-]/gu, "").trim();
+        const phoneSearch = cleanSearch.replace(/[\s-]/g, "").replace(/^\+8869/, "09");
+        let query = client.from(tableName).select(columnNames, { count: "exact" })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false });
+        if (filterStatus.value) query = query.eq("status", filterStatus.value);
+        if (cleanSearch) {
+          const filters = ["name.ilike.*" + cleanSearch + "*", "case_number.ilike.*" + cleanSearch + "*"];
+          if (phoneSearch) filters.push("phone.ilike.*" + phoneSearch + "*");
+          query = query.or(filters.join(","));
+        }
+
+        try {
+          const { data, error, count } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
+          if (!staff || sequence !== listRequest) return;
+          if (error) throw error;
+          const pages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+          if (page >= pages) {
+            page = pages - 1;
+            await loadCases();
+            return;
+          }
+          cases = data ?? [];
+          renderRows();
+          countLabel.textContent = "共 " + (count ?? cases.length) + " 筆";
+          byId("pagination").textContent = "第 " + (page + 1) + "／" + pages + " 頁";
+          empty.hidden = cases.length > 0;
+          previous.disabled = page === 0;
+          next.disabled = page + 1 >= pages;
+          exportButton.disabled = cases.length === 0;
+        } catch {
+          if (!staff || sequence !== listRequest) return;
+          cases = [];
+          body.replaceChildren();
+          countLabel.textContent = "";
+          byId("pagination").textContent = "";
+          listError.textContent = "無法讀取案件。請稍候重新整理，或重新登入。";
+        } finally {
+          if (sequence === listRequest) table.setAttribute("aria-busy", "false");
+        }
+      }
+
+      function makeCell(label, value) {
+        const td = document.createElement("td");
+        td.dataset.label = label;
+        td.setAttribute("role", "cell");
+        td.textContent = value ?? "—";
+        return td;
+      }
+
+      function renderRows() {
+        body.replaceChildren();
+        for (const record of cases) {
+          const row = document.createElement("tr");
+          row.setAttribute("role", "row");
+          row.append(
+            makeCell("案件編號", record.case_number),
+            makeCell("收件時間", caseDate(record.created_at)),
+            makeCell("稱呼", record.name),
+            makeCell("聯絡電話", record.phone),
+            makeCell("受騙金額", record.amount)
+          );
+          const statusCell = makeCell("處理狀態", "");
+          const badge = document.createElement("span");
+          badge.className = "status-pill";
+          badge.dataset.status = record.status;
+          badge.textContent = statusNames[record.status] ?? "未知狀態";
+          statusCell.append(badge);
+          const actions = makeCell("案件操作", "");
+          actions.className = "row-actions";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "button secondary table-button";
+          button.textContent = "編輯案件";
+          button.setAttribute("aria-label", "編輯案件 " + record.case_number);
+          button.addEventListener("click", () => openEditor(record));
+          actions.append(button);
+          row.append(statusCell, actions);
+          body.append(row);
+        }
+      }
+
+      function openEditor(record) {
+        selectedCase = record;
+        byId("detail-case-number").textContent = record.case_number;
+        byId("detail-created-at").textContent = caseDate(record.created_at);
+        byId("detail-name").textContent = record.name;
+        byId("detail-phone").textContent = record.phone;
+        byId("detail-amount").textContent = record.amount;
+        caseStatus.value = record.status;
+        note.value = record.note ?? "";
+        byId("save-error").textContent = "";
+        editor.showModal();
+      }
+
+      byId("case-filter").addEventListener("submit", (event) => {
+        event.preventDefault();
+        page = 0;
+        loadCases();
+      });
+      filterStatus.addEventListener("change", () => { page = 0; loadCases(); });
+      byId("reload").addEventListener("click", () => loadCases());
+      previous.addEventListener("click", () => { page -= 1; loadCases(); });
+      next.addEventListener("click", () => { page += 1; loadCases(); });
+
+      closeEditor.addEventListener("click", () => editor.close());
+      editor.addEventListener("cancel", (event) => {
+        if (save.disabled) event.preventDefault();
+      });
+      editor.addEventListener("close", () => {
+        selectedCase = null;
+        byId("editor-form").reset();
+        byId("save-error").textContent = "";
+      });
+
+      byId("editor-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!staff || !selectedCase || save.disabled) return;
+        const record = selectedCase;
+        const saveError = byId("save-error");
+        const updatedStatus = caseStatus.value;
+        const updatedNote = note.value.trim();
+
+        save.disabled = true;
+        closeEditor.disabled = true;
+        caseStatus.disabled = true;
+        note.disabled = true;
+        save.textContent = "儲存中⋯";
+        saveError.textContent = "";
+        byId("save-announcement").textContent = "";
+
+        try {
+          let update = client.from(tableName).update({ status: updatedStatus, note: updatedNote })
+            .eq("id", record.id).eq("status", record.status);
+          update = record.note == null ? update.is("note", null) : update.eq("note", record.note);
+          const { data, error } = await update.select("id").maybeSingle();
+          if (!staff || selectedCase !== record) return;
+          if (error) throw error;
+          if (!data) {
+            saveError.textContent = "這筆案件資料已更新，請先複製備註、關閉視窗並重新整理，再編輯最新資料。";
+            return;
+          }
+          editor.close();
+          byId("save-announcement").textContent = "已儲存案件 " + record.case_number;
+          await loadCases();
+        } catch {
+          if (staff && selectedCase === record) saveError.textContent = "案件無法儲存，請稍候再試。";
+        } finally {
+          save.disabled = false;
+          closeEditor.disabled = false;
+          caseStatus.disabled = false;
+          note.disabled = false;
+          save.textContent = "儲存";
+        }
+      });
+
+      function csvCell(value) {
+        const raw = String(value ?? "");
+        const safe = /^[\s\u200b\ufeff]*[=+\-@＝＋－＠]/u.test(raw) || /^[\t\r\n]/.test(raw)
+          ? "'" + raw
+          : raw;
+        return '"' + safe.replace(/"/g, '""') + '"';
+      }
+
+      exportButton.addEventListener("click", () => {
+        if (!staff || !cases.length) return;
+        const data = [["案件編號", "收件時間（台灣）", "稱呼", "聯絡電話", "受騙金額", "處理狀態"]];
+        for (const record of cases) {
+          data.push([
+            record.case_number, caseDate(record.created_at), record.name,
+            "'" + record.phone, record.amount, statusNames[record.status] ?? ""
+          ]);
+        }
+        const csv = new Blob(["\ufeff" + data.map((columns) => columns.map(csvCell).join(",")).join("\r\n")], {
+          type: "text/csv;charset=utf-8"
+        });
+        const url = URL.createObjectURL(csv);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "案件列表-第" + (page + 1) + "頁.csv";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+    });
+  </script>
+</body>
+</html>

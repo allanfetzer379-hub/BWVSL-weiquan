@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e3a8a">
+  <title>台灣網路詐騙維權中心｜緊急止付與全額本金求償評估</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue:#1e3a8a; --deep:#112650; --ink:#182d4a; --muted:#536581;
+      --paper:#f2f5fb; --line:#dbe4f0; --gold:#ffd47e; --green:#06c755;
+    }
+    *,*::before,*::after { box-sizing:border-box }
+    [hidden] { display:none!important }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.6 "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif }
+    h1,h2,h3,p,ol { margin:0 }
+    button,input,select { font:inherit }
+    a { color:inherit }
+    :focus-visible { outline:3px solid #2563eb; outline-offset:3px }
+    .shell { width:min(1120px,calc(100% - 32px)); margin-inline:auto }
+    .bar { background:#fff; border-bottom:1px solid var(--line) }
+    .bar-inner { min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:10px }
+    .brand { display:flex; align-items:center; gap:9px; font-size:.9rem; font-weight:800; line-height:1.35 }
+    .mark { display:grid; place-items:center; width:36px; height:36px; flex:none; border-radius:10px; background:var(--blue); color:#fff }
+    .mark svg { width:21px; height:21px }
+    .jump { flex:none; padding:9px 0; color:var(--blue); font-size:.84rem; font-weight:800; text-decoration:none }
+    .hero {
+      position:relative; isolation:isolate; overflow:hidden; color:#fff;
+      background:linear-gradient(118deg,#0e2043,#1e3a8a 72%,#2d509e);
+    }
+    .hero::after {
+      content:""; position:absolute; z-index:-1; right:-125px; top:-150px; width:450px; height:450px;
+      border:1px solid #ffffff21; border-radius:50%; box-shadow:0 0 0 43px #ffffff0b,0 0 0 89px #ffffff08,0 0 0 145px #ffffff06;
+    }
+    .hero > .shell { padding-block:32px 48px }
+    .hero h1 { font-size:clamp(1.65rem,4.5vw,3.2rem); font-weight:850; line-height:1.23 }
+    .hero h1 strong { display:block; margin-top:8px; color:var(--gold) }
+    .hero h1 strong span { display:inline-block }
+    .hero p { max-width:43rem; margin-top:14px; color:#edf3ff }
+    .metrics { position:relative; margin-top:-21px }
+    .metrics-grid { display:grid; gap:8px }
+    .metric {
+      display:grid; grid-template-columns:36px 1fr; gap:10px; align-items:start; padding:11px 13px;
+      background:#fff; border:1px solid #ead7b0; border-radius:12px; box-shadow:0 7px 18px #192f5710;
+    }
+    .metric-icon { display:grid; place-items:center; width:36px; height:36px; border-radius:9px; background:#fff1ca; font-size:1.1rem }
+    .metric h3 { color:var(--deep); font-size:1.02rem; font-weight:850 }
+    .metric p { color:var(--muted); font-size:.86rem }
+    .alert { margin-top:12px; padding:10px 12px; background:#fff7e5; color:#644213; border-radius:9px; font-size:.88rem }
+    .alert a,.status-help a { font-weight:800 }
+    .layout { display:grid; gap:16px; align-items:start; padding-block:16px 28px }
+    .panel { min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px; padding:clamp(16px,3.2vw,30px); box-shadow:0 8px 26px #172d5510 }
+    .panel h2,.success h1 { font-size:clamp(1.17rem,2.7vw,1.55rem); font-weight:850; line-height:1.35 }
+    #intake { scroll-margin-top:12px; border-top:4px solid #e6a43b }
+    .fields,.case-list { display:grid; gap:12px; margin-top:15px }
+    label { display:block; margin-bottom:4px; font-size:.94rem; font-weight:800 }
+    .control { width:100%; min-height:54px; border:1px solid #c5d2e5; border-radius:9px; padding:10px 12px; font-size:1rem; background:#f9fbff; color:var(--ink) }
+    .control::placeholder { color:#5e718e }
+    .button {
+      display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:45px; padding:10px 13px;
+      border:1px solid transparent; border-radius:10px; font-weight:850; text-align:center; text-decoration:none; cursor:pointer;
+    }
+    .submit { width:100%; min-height:58px; margin-top:15px; background:linear-gradient(105deg,#ffd471,#f9a638); color:#342109; font-size:1.04rem; box-shadow:0 7px 16px #ce881f36 }
+    .submit:hover { filter:brightness(.96) }
+    .submit:disabled { opacity:.78 }
+    .submit[aria-busy="true"] { cursor:wait }
+    .error { margin-top:10px; color:#9c241c; font-weight:700 }
+    .spinner { width:17px; height:17px; flex:none; border:2px solid #34210945; border-top-color:#342109; border-radius:50%; animation:spin .7s linear infinite }
+    @keyframes spin { to { transform:rotate(360deg) } }
+    .case { padding:10px 12px; border:1px solid var(--line); border-left:3px solid #c48a32; border-radius:9px; background:#f8faff }
+    .case h3 { font-size:.98rem; font-weight:850 }
+    .case p { margin-top:3px; color:var(--muted); font-size:.89rem }
+    .case strong { color:var(--blue) }
+    .steps { margin-top:17px; border-top:1px solid var(--line); padding-top:14px }
+    .steps ol { margin-top:7px; padding-left:1.35rem; list-style:decimal; color:var(--muted); font-size:.9rem }
+    .steps li + li { margin-top:4px }
+    .view { transition:opacity .2s ease,transform .2s ease }
+    .view.leaving,.view.entering { opacity:0; transform:translateY(6px) }
+    .success { width:min(660px,calc(100% - 32px)); margin:28px auto; text-align:center }
+    .status-mark { display:grid; place-items:center; width:64px; height:64px; margin:0 auto 13px; border-radius:50%; background:#fff1cf; color:#744b10; font-size:1.8rem; font-weight:850 }
+    .success.received .status-mark { background:#e1f8e9; color:#08723b; animation:pop .38s ease-out }
+    @keyframes pop { from { opacity:0; transform:scale(.72) } to { opacity:1; transform:scale(1) } }
+    .highlight { margin-top:15px; padding:clamp(12px,3vw,20px); background:#eef9f2; border:1px solid #c2e7d0; border-radius:13px }
+    .guidance { text-align:left }
+    .copy-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:11px; padding:8px 10px; background:#fff; border-radius:9px }
+    .case-number { color:#145836; font:850 1.16rem ui-monospace,monospace }
+    .copy { background:#fff; border-color:#9ecfb2; color:#145836; font-size:.85rem }
+    .line-button { width:100%; min-height:56px; margin-top:12px; background:var(--green); color:#092b16 }
+    .line-button:hover { background:#0cba52 }
+    .line-mark { padding:2px 5px; border-radius:5px; background:#092b16; color:#fff; font-size:.72rem }
+    .status-help,.copy-status { margin-top:7px; color:var(--muted); font-size:.86rem }
+    .copy-status:empty { display:none }
+    .footer { padding:12px 16px 22px; color:var(--muted); text-align:center; font-size:.8rem }
+    @media(min-width:700px) {
+      .metrics-grid { grid-template-columns:repeat(3,minmax(0,1fr)) }
+      .metric { padding:14px }
+      .layout { grid-template-columns:minmax(0,1fr) minmax(0,1.06fr); gap:19px }
+      #intake { grid-column:2; grid-row:1 }
+      .cases { grid-column:1; grid-row:1 }
+    }
+    @media(min-width:900px) {
+      .shell { width:min(1120px,calc(100% - 64px)) }
+      .hero > .shell { padding-block:43px 60px }
+      .brand { font-size:1rem }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      *,*::before,*::after { animation-duration:.01ms!important; transition:none!important }
+    }
+  </style>
+</head>
+<body class="selection:bg-amber-100 selection:text-blue-950">
+  <header class="bar">
+    <div class="shell bar-inner">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>台灣網路詐騙維權中心｜緊急止付與全額本金求償評估</span>
+      </div>
+      <a id="jump" class="jump hover:underline underline-offset-4" href="#intake">免費評估 <span aria-hidden="true">→</span></a>
+    </div>
+  </header>
+
+  <main>
+    <div id="intake-view" class="view">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="shell">
+          <h1 id="hero-title">遭遇網路詐騙、平台無法出金？<strong><span>把握通報時機・</span><span>評估全額本金求償</span></strong></h1>
+          <p>針對假投資、交友投資詐騙、虛擬資產及警示帳戶案件，從匯款憑證與對話紀錄著手，釐清金流、證據保全與民事求償途徑。</p>
+        </div>
+      </section>
+
+      <section class="shell metrics" aria-label="處理時效與求償重點">
+        <div class="metrics-grid">
+          <article class="metric"><span class="metric-icon" aria-hidden="true">⚡</span><div><h3>立即通報</h3><p>已匯款時聯絡銀行，並向警方報案。</p></div></article>
+          <article class="metric"><span class="metric-icon" aria-hidden="true">⏳</span><div><h3>儘速保全證據</h3><p>保留交易憑證及對話紀錄，評估聲請假扣押的條件。</p></div></article>
+          <article class="metric"><span class="metric-icon" aria-hidden="true">🎯</span><div><h3>全額本金求償評估</h3><p>依金流、證據與涉案人責任，評估民事求償範圍。</p></div></article>
+        </div>
+        <p class="alert">疑似遭遇詐騙，可先撥打 <a class="underline underline-offset-4" href="tel:165">165 反詐騙諮詢專線</a>。</p>
+      </section>
+
+      <div class="shell layout">
+        <section class="panel" id="intake" aria-labelledby="intake-title">
+          <h2 id="intake-title">立即申請免費維權評估</h2>
+          <form id="intake-form" method="post">
+            <p id="receipt-info" class="status-help" hidden>目前尚未開放線上收件。</p>
+            <div class="fields">
+              <div>
+                <label for="name">您的稱呼</label>
+                <input class="control" id="name" name="name" type="text" placeholder="例如：陳先生 / 林小姐" maxlength="40" autocomplete="nickname" required>
+              </div>
+              <div>
+                <label for="phone">聯絡電話</label>
+                <input class="control" id="phone" name="phone" type="tel" placeholder="台灣手機號碼（如 0912-345-678）" maxlength="24" autocomplete="tel" required>
+              </div>
+              <div>
+                <label for="amount">受騙金額（新台幣）</label>
+                <select class="control" id="amount" name="amount" required>
+                  <option value="" disabled selected>請選擇受騙金額</option>
+                  <option>未滿 5 萬元</option>
+                  <option>5 萬元至未滿 30 萬元</option>
+                  <option>30 萬元至未滿 100 萬元</option>
+                  <option>100 萬元以上</option>
+                </select>
+              </div>
+            </div>
+            <p id="submit-error" class="error" role="alert" hidden></p>
+            <button class="button submit motion-safe:transition-colors" id="submit-button" type="submit" disabled>
+              <span class="spinner" id="spinner" aria-hidden="true" hidden></span>
+              <span id="submit-label" aria-live="polite">立即提交資料・啟動全額求償評估</span>
+            </button>
+            <noscript><p class="status-help">請啟用 JavaScript 後使用表單。</p></noscript>
+          </form>
+        </section>
+
+        <aside class="panel cases" aria-labelledby="cases-title">
+          <h2 id="cases-title">重點維權與全額求償受理範圍</h2>
+          <div class="case-list">
+            <article class="case"><h3>假投資／飆股群組詐騙</h3><p>平台鎖定帳戶，要求先繳保證金或稅金才讓您出金。<strong>整理金流，評估本金求償。</strong></p></article>
+            <article class="case"><h3>交友投資／虛擬資產詐騙</h3><p>對方以交往為由誘導匯款，或要求把 USDT（泰達幣）轉入指定錢包。<strong>整理轉帳和鏈上交易紀錄。</strong></p></article>
+            <article class="case"><h3>求職代工／網拍後帳戶遭警示</h3><p>交付存摺、金融卡後發現帳戶遭列警示。<strong>整理求職或交易證據，釐清後續申請程序。</strong></p></article>
+          </div>
+          <section class="steps" aria-labelledby="steps-title">
+            <h2 id="steps-title">三步驟申請維權評估</h2>
+            <ol>
+              <li>填寫稱呼、聯絡電話與受騙金額。</li>
+              <li>取得編號後，透過已確認的 LINE 官方帳號聯絡。</li>
+              <li>整理匯款憑證與對話紀錄，供後續求償評估。</li>
+            </ol>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <section class="panel success view" id="success-view" aria-labelledby="success-title" hidden>
+      <div class="status-mark" aria-hidden="true">✓</div>
+      <h1 id="success-title" tabindex="-1"></h1>
+      <div class="highlight">
+        <p class="guidance" id="success-guidance"></p>
+        <div class="copy-row">
+          <code id="case-number" class="case-number"></code>
+          <button id="copy-button" class="button copy" type="button">複製編號</button>
+        </div>
+        <p id="copy-status" class="copy-status" role="status"></p>
+        <a id="line-link" class="button line-button motion-safe:transition-colors" rel="noreferrer" hidden>
+          <span class="line-mark" aria-hidden="true">LINE</span> 加入 LINE 傳送編號
+        </a>
+        <p id="phone-help" class="status-help" hidden>需要立即諮詢時，可撥打 <a href="tel:165">165 反詐騙諮詢專線</a>。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">網路詐騙案情初篩與民事求償評估</footer>
+
+  <script src="./config.js"></script>
+  <script>
+    const config = window.WEIQUAN_CONFIG ?? {};
+    const apiKey = config.publishableKey?.trim() ?? "";
+    const projectUrl = config.supabaseUrl?.trim().replace(/\/$/, "") ?? "";
+    const hasEndpoint = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(projectUrl) &&
+      apiKey.startsWith("sb_publishable_");
+    let lineLink = "";
+    try {
+      const url = new URL(config.lineUrl);
+      if (["https://line.me", "https://lin.ee"].includes(url.origin) &&
+          !url.username && !url.password && url.pathname !== "/" && !url.pathname.includes("@your_line_id")) {
+        lineLink = url.href;
+      }
+    } catch {}
+    const byId = (id) => document.getElementById(id);
+    const form = byId("intake-form");
+    const button = byId("submit-button");
+    const label = byId("submit-label");
+    const error = byId("submit-error");
+    const spinner = byId("spinner");
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const casePattern = /^#TW-\d{4}-\d{4,}$/;
+    let pending;
+
+    if (lineLink) byId("line-link").href = lineLink;
+    byId("receipt-info").hidden = hasEndpoint;
+    button.disabled = !hasEndpoint;
+
+    for (const input of form.querySelectorAll("input")) {
+      input.addEventListener("input", () => input.setCustomValidity(""));
+    }
+
+    async function submitLeadData({ requestId, name, phone, amount }) {
+      const response = await fetch(projectUrl + "/rest/v1/rpc/submit_wei_quan_case", {
+        method: "POST",
+        headers: { apikey: apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_request_id: requestId, p_name: name, p_phone: phone, p_amount: amount }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!response.ok) throw new Error("收件服務未確認");
+      const caseNumber = await response.json();
+      if (typeof caseNumber !== "string" || !casePattern.test(caseNumber)) {
+        throw new Error("收件回覆無效");
+      }
+      return caseNumber;
+    }
+
+    function trackConversion() {
+      // 在此觸發收件轉換事件，事件內容請勿帶入電話、金額或案件編號。
+    }
+
+    async function showSuccess(caseNumber) {
+      const intake = byId("intake-view");
+      const view = byId("success-view");
+      const title = byId("success-title");
+      const guidance = byId("success-guidance");
+      title.textContent = "您的維權專案已建檔！";
+      byId("case-number").textContent = caseNumber;
+      view.classList.add("received");
+      guidance.textContent = "已收到您的資料。請先保留匯款憑證、交易明細與對話紀錄。";
+      if (lineLink) {
+        const lineInstruction = document.createElement("strong");
+        lineInstruction.textContent = " 請加入 LINE 官方帳號，並傳送下方編號以便後續聯絡。";
+        guidance.append(lineInstruction);
+      }
+      byId("line-link").hidden = !lineLink;
+      byId("phone-help").hidden = Boolean(lineLink);
+
+      intake.classList.add("leaving");
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await wait(200);
+      form.reset();
+      pending = undefined;
+      intake.hidden = true;
+      byId("jump").hidden = true;
+      view.classList.add("entering");
+      view.hidden = false;
+      window.scrollTo(0, 0);
+      title.focus({ preventScroll: true });
+      requestAnimationFrame(() => requestAnimationFrame(() => view.classList.remove("entering")));
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!hasEndpoint || button.disabled) return;
+      error.hidden = true;
+
+      for (const input of form.querySelectorAll("input")) {
+        input.value = input.value.trim();
+        input.setCustomValidity(input.value ? "" : "請填寫此欄位。");
+      }
+      const phone = byId("phone");
+      const digits = phone.value.normalize("NFKC").replace(/[\s()-]/g, "");
+      if (phone.value && !/^(?:09|\+8869)\d{8}$/.test(digits)) {
+        phone.setCustomValidity("請輸入有效的台灣手機號碼，例如 0912-345-678。");
+      }
+      if (!form.reportValidity()) return;
+
+      const data = Object.fromEntries(new FormData(form));
+      data.phone = digits.replace(/^\+886/, "0");
+      const snapshot = JSON.stringify(data);
+      if (pending?.snapshot !== snapshot) {
+        pending = { snapshot, requestId: crypto.randomUUID() };
+      }
+      data.requestId = pending.requestId;
+
+      const previousLabel = label.textContent;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      spinner.hidden = false;
+      label.textContent = "資料處理中，請稍候⋯";
+      const minimumDelay = wait(1200);
+      let caseNumber;
+      try {
+        caseNumber = await submitLeadData(data);
+      } catch {
+        await minimumDelay;
+        error.textContent = "目前無法確認收件。已保留您填寫的資料，請稍後重試。";
+        error.hidden = false;
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        spinner.hidden = true;
+        label.textContent = previousLabel;
+        return;
+      }
+      await minimumDelay;
+      await showSuccess(caseNumber);
+      trackConversion();
+    });
+
+    byId("copy-button").addEventListener("click", async () => {
+      const number = byId("case-number");
+      const status = byId("copy-status");
+      try {
+        await navigator.clipboard.writeText(number.textContent);
+        status.textContent = "已複製編號";
+      } catch {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(number);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        let copied = false;
+        try { copied = document.execCommand("copy"); } catch {}
+        status.textContent = copied ? "已複製編號" : "已選取編號，請手動複製。";
+      }
+    });
+  </script>
+</body>
+</html>
