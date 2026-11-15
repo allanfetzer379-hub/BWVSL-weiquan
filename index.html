@@ -93,6 +93,8 @@
     .status-help,.copy-status { margin-top:7px; color:var(--muted); font-size:.86rem }
     .copy-status:empty { display:none }
     .footer { padding:12px 16px 22px; color:var(--muted); text-align:center; font-size:.8rem }
+    .footer details { max-width:540px; margin:4px auto 0 }
+    .footer summary { cursor:pointer }
     @media(min-width:700px) {
       .metrics-grid { grid-template-columns:repeat(3,minmax(0,1fr)) }
       .metric { padding:14px }
@@ -212,7 +214,13 @@
     </section>
   </main>
 
-  <footer class="footer">網路詐騙案情初篩與民事求償評估</footer>
+  <footer class="footer">
+    網路詐騙案情初篩與民事求償評估
+    <details id="meta-pixel-notice" hidden>
+      <summary>Meta 廣告追蹤說明</summary>
+      <p>Meta 等第三方可能透過 Cookie、像素等技術，從本站及其他網站取得資訊，用於衡量廣告成效及投放個人化廣告。您可前往 <a href="https://optout.aboutads.info/" rel="noreferrer">廣告隱私選擇</a> 管理個人化廣告的資料收集與使用。</p>
+    </details>
+  </footer>
 
   <script src="./config.js"></script>
   <script>
@@ -237,6 +245,59 @@
     for (const input of form.querySelectorAll("input")) {
       input.addEventListener("input", () => input.setCustomValidity(""));
     }
+
+    function installMetaPixel() {
+      if (typeof window.fbq === "function") return window.fbq;
+      const fbq = function () {
+        if (fbq.callMethod) {
+          fbq.callMethod.apply(fbq, arguments);
+        } else {
+          fbq.queue.push(arguments);
+        }
+      };
+      fbq.push = fbq;
+      fbq.loaded = true;
+      fbq.version = "2.0";
+      fbq.queue = [];
+      window.fbq = fbq;
+      window._fbq ??= fbq;
+
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = "https://connect.facebook.net/en_US/fbevents.js";
+      document.head.append(script);
+      return fbq;
+    }
+
+    async function loadMetaPixels() {
+      if (!hasEndpoint) return [];
+      try {
+        const response = await fetch(projectUrl + "/rest/v1/rpc/get_wei_quan_meta_pixel_ids", {
+          headers: { apikey: apiKey },
+          cache: "no-store",
+          signal: AbortSignal.timeout(4000)
+        });
+        if (!response.ok) return [];
+        const ids = await response.json();
+        if (!Array.isArray(ids)) return [];
+        const pixelIds = [...new Set(ids.filter((id) => typeof id === "string" && /^\d{8,20}$/.test(id)))];
+        if (!pixelIds.length) return [];
+
+        byId("meta-pixel-notice").hidden = false;
+        const fbq = installMetaPixel();
+        for (const id of pixelIds) {
+          fbq("set", "autoConfig", false, id);
+          fbq("init", id);
+          fbq("trackSingle", id, "PageView");
+        }
+        return pixelIds;
+      } catch {
+        // 廣告追蹤無法使用時，收件流程仍可繼續。
+        return [];
+      }
+    }
+
+    const metaPixelsReady = loadMetaPixels();
 
     async function submitLeadData({ requestId, name, phone, amount }) {
       const response = await fetch(projectUrl + "/rest/v1/rpc/submit_wei_quan_case", {
@@ -349,6 +410,12 @@
         label.textContent = previousLabel;
         return;
       }
+      metaPixelsReady.then((pixelIds) => {
+        for (const id of pixelIds) {
+          window.fbq("trackSingle", id, "Lead");
+          window.fbq("trackSingle", id, "CompleteRegistration");
+        }
+      }).catch(() => {});
       const [configuredLineLink] = await Promise.all([lineLink, minimumDelay]);
       await showSuccess(caseNumber, configuredLineLink);
     });
