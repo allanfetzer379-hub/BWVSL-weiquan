@@ -86,6 +86,7 @@
     .guidance { text-align:left }
     .copy-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:11px; padding:8px 10px; background:#fff; border-radius:9px }
     .case-number { color:#145836; font:850 1.16rem ui-monospace,monospace }
+    .submitted-name { color:#145836; font-weight:850; overflow-wrap:anywhere; min-width:0; white-space:pre-wrap }
     .copy { background:#fff; border-color:#9ecfb2; color:#145836; font-size:.85rem }
     .line-button { width:100%; min-height:56px; margin-top:12px; background:var(--green); color:#092b16 }
     .line-button:hover { background:#0cba52 }
@@ -187,7 +188,7 @@
             <h2 id="steps-title">三步驟申請維權評估</h2>
             <ol>
               <li>填寫稱呼、聯絡電話與受騙金額。</li>
-              <li>取得編號後，加入 LINE 並傳送案件編號。</li>
+              <li>送件成功後，加入 LINE 並傳送您填寫的姓名。</li>
               <li>整理匯款憑證與對話紀錄，供後續求償評估。</li>
             </ol>
           </section>
@@ -200,13 +201,14 @@
       <h1 id="success-title" tabindex="-1"></h1>
       <div class="highlight">
         <p class="guidance" id="success-guidance"></p>
+        <p class="status-help">案件編號 <code id="case-number" class="case-number"></code></p>
         <div class="copy-row">
-          <code id="case-number" class="case-number"></code>
-          <button id="copy-button" class="button copy" type="button">複製編號</button>
+          <strong id="submitted-name" class="submitted-name"></strong>
+          <button id="copy-button" class="button copy" type="button">複製姓名</button>
         </div>
         <p id="copy-status" class="copy-status" role="status"></p>
         <a id="line-link" class="button line-button motion-safe:transition-colors" target="_blank" rel="noopener noreferrer" hidden>
-          <span class="line-mark" aria-hidden="true">LINE</span> 複製編號並加入 LINE
+          <span class="line-mark" aria-hidden="true">LINE</span> 複製姓名並加入 LINE
         </a>
         <div id="line-unavailable" hidden>
           <p id="line-status" class="status-help" role="status">暫時無法取得 LINE 連結，請保留案件編號。</p>
@@ -344,16 +346,18 @@
       action.hidden = !lineLink;
       byId("line-unavailable").hidden = Boolean(lineLink);
       byId("success-guidance").textContent = lineLink
-        ? "點擊下方按鈕複製案件編號並加入 LINE。進入聊天室後，請貼上並送出編號，讓專員接續處理。"
-        : "已收到您的資料，請先複製並保留案件編號。";
+        ? "點擊下方按鈕複製您填寫的姓名並加入 LINE。進入聊天室後，請貼上並送出姓名，讓專員接續處理。"
+        : "已收到您的資料。LINE 連結載入後，請加入 LINE 並傳送姓名。";
     }
 
-    async function showSuccess(caseNumber, lineLink) {
+    async function showSuccess(caseNumber, submittedName, lineLink) {
       const intake = byId("intake-view");
       const view = byId("success-view");
       const title = byId("success-title");
       title.textContent = "您的維權專案已建檔！";
       byId("case-number").textContent = caseNumber;
+      byId("submitted-name").textContent = submittedName;
+      byId("copy-status").textContent = "";
       view.classList.add("received");
       updateLineGuidance(lineLink);
 
@@ -413,29 +417,29 @@
         }
       }).catch(() => {});
       const [configuredLineLink] = await Promise.all([lineLink, minimumDelay]);
-      await showSuccess(caseNumber, configuredLineLink);
+      await showSuccess(caseNumber, data.name, configuredLineLink);
     });
 
-    async function copyCaseNumber() {
-      const number = byId("case-number");
+    async function copySubmittedName() {
+      const name = byId("submitted-name");
       const status = byId("copy-status");
       try {
-        await navigator.clipboard.writeText(number.textContent);
-        status.textContent = "已複製編號";
+        await navigator.clipboard.writeText(name.textContent);
+        status.textContent = "已複製姓名";
       } catch {
         const selection = window.getSelection();
         const range = document.createRange();
-        range.selectNodeContents(number);
+        range.selectNodeContents(name);
         selection.removeAllRanges();
         selection.addRange(range);
         let copied = false;
         try { copied = document.execCommand("copy"); } catch {}
-        status.textContent = copied ? "已複製編號" : "已選取編號，請手動複製。";
+        status.textContent = copied ? "已複製姓名" : "已選取姓名，請手動複製。";
       }
     }
 
-    byId("copy-button").addEventListener("click", copyCaseNumber);
-    byId("line-link").addEventListener("click", copyCaseNumber);
+    byId("copy-button").addEventListener("click", copySubmittedName);
+    byId("line-link").addEventListener("click", copySubmittedName);
     const retryLine = byId("retry-line");
     retryLine.addEventListener("click", async () => {
       retryLine.disabled = true;
