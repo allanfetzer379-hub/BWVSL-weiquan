@@ -186,7 +186,7 @@
             <h2 id="steps-title">三步驟申請維權評估</h2>
             <ol>
               <li>填寫稱呼、聯絡電話與受騙金額。</li>
-              <li>取得編號後，透過已確認的 LINE 官方帳號聯絡。</li>
+              <li>取得編號後，依成功頁的聯絡方式聯繫。</li>
               <li>整理匯款憑證與對話紀錄，供後續求償評估。</li>
             </ol>
           </section>
@@ -221,14 +221,6 @@
     const projectUrl = config.supabaseUrl?.trim().replace(/\/$/, "") ?? "";
     const hasEndpoint = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(projectUrl) &&
       apiKey.startsWith("sb_publishable_");
-    let lineLink = "";
-    try {
-      const url = new URL(config.lineUrl);
-      if (["https://line.me", "https://lin.ee"].includes(url.origin) &&
-          !url.username && !url.password && url.pathname !== "/" && !url.pathname.includes("@your_line_id")) {
-        lineLink = url.href;
-      }
-    } catch {}
     const byId = (id) => document.getElementById(id);
     const form = byId("intake-form");
     const button = byId("submit-button");
@@ -239,7 +231,6 @@
     const casePattern = /^#TW-\d{4}-\d{4,}$/;
     let pending;
 
-    if (lineLink) byId("line-link").href = lineLink;
     byId("receipt-info").hidden = hasEndpoint;
     button.disabled = !hasEndpoint;
 
@@ -262,11 +253,28 @@
       return caseNumber;
     }
 
-    function trackConversion() {
-      // 在此觸發收件轉換事件，事件內容請勿帶入電話、金額或案件編號。
+    async function loadLineLink() {
+      try {
+        const response = await fetch(projectUrl + "/rest/v1/rpc/get_wei_quan_line_url", {
+          headers: { apikey: apiKey },
+          cache: "no-store",
+          signal: AbortSignal.timeout(2200)
+        });
+        if (!response.ok) return "";
+        const link = await response.json();
+        if (typeof link !== "string") return "";
+        const url = new URL(link);
+        if (["https://line.me", "https://lin.ee"].includes(url.origin) &&
+            !url.username && !url.password && url.pathname !== "/" && !/@your_line_id/i.test(url.pathname)) {
+          return url.href;
+        }
+      } catch {
+        // 收件成功時，若暫時無法取得 LINE 設定，仍顯示案件編號和 165。
+      }
+      return "";
     }
 
-    async function showSuccess(caseNumber) {
+    async function showSuccess(caseNumber, lineLink) {
       const intake = byId("intake-view");
       const view = byId("success-view");
       const title = byId("success-title");
@@ -279,6 +287,7 @@
         const lineInstruction = document.createElement("strong");
         lineInstruction.textContent = " 請加入 LINE 官方帳號，並傳送下方編號以便後續聯絡。";
         guidance.append(lineInstruction);
+        byId("line-link").href = lineLink;
       }
       byId("line-link").hidden = !lineLink;
       byId("phone-help").hidden = Boolean(lineLink);
@@ -326,6 +335,7 @@
       spinner.hidden = false;
       label.textContent = "資料處理中，請稍候⋯";
       const minimumDelay = wait(1200);
+      const lineLink = loadLineLink();
       let caseNumber;
       try {
         caseNumber = await submitLeadData(data);
@@ -339,9 +349,8 @@
         label.textContent = previousLabel;
         return;
       }
-      await minimumDelay;
-      await showSuccess(caseNumber);
-      trackConversion();
+      const [configuredLineLink] = await Promise.all([lineLink, minimumDelay]);
+      await showSuccess(caseNumber, configuredLineLink);
     });
 
     byId("copy-button").addEventListener("click", async () => {

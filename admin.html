@@ -98,6 +98,26 @@
     .status-text:empty, .warning:empty { display: none; }
     .console-head { align-items: flex-start; }
     .console-head p { margin-top: 5px; word-break: break-word; }
+    .console-nav, .setting-actions, .row-action-buttons, .copy-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+    }
+    .console-nav { margin-top: 14px; }
+    .console-nav .button[aria-pressed="true"] { color: white; background: var(--blue); }
+    .settings-grid { display: grid; gap: 15px; margin-top: 17px; }
+    .settings-grid fieldset { min-width: 0; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 9px; }
+    .settings-grid legend { padding-inline: 5px; font-weight: 750; }
+    .settings-grid h3 { margin: 0; font-size: 1rem; }
+    .setting-actions { margin-top: 10px; }
+    .setting-actions .field { flex: 0 1 150px; }
+    .pixel-fields { display: grid; gap: 14px; margin-block: 12px; }
+    .pixel-list { display: grid; gap: 6px; margin-top: 7px; }
+    .pixel-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .pixel-row > input { width: auto; min-width: 140px; flex: 1; }
+    .pixel-toggle { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; }
+    .pixel-toggle input { width: 20px; height: 20px; min-height: 0; }
     .toolbar { justify-content: flex-start; align-items: end; margin-block: 18px; }
     .search { flex: 2 1 215px; }
     .status-filter { flex: 1 1 145px; max-width: 245px; }
@@ -138,6 +158,9 @@
     .details { margin: 12px 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
     .details dt { font-weight: 750; }
     .details dd { margin: 0; overflow-wrap: anywhere; }
+    .copy-summary { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+    .copy-summary .field { margin-bottom: 8px; }
+    .copy-summary .subtle { margin-top: 5px; }
     .dialog-actions { justify-content: end; margin-top: 15px; }
     @media (max-width: 780px) {
       .table-frame table, .table-frame tbody { display: block; }
@@ -147,7 +170,7 @@
       .table-frame td { display: block; border: 0; padding: 4px 5px; }
       .table-frame td[data-label]::before { display: block; content: attr(data-label); font-size: .77rem; color: var(--muted); }
       .table-frame .row-actions { grid-column: 1 / -1; }
-      .table-button { width: 100%; }
+      .table-button { flex: 1 1 auto; }
     }
     @media (max-width: 380px) {
       .shell { width: calc(100% - 24px); }
@@ -198,7 +221,12 @@
           <p class="subtle" id="operator"></p>
         </div>
       </header>
+      <nav class="console-nav" aria-label="後台功能">
+        <button type="button" id="show-cases" class="button secondary" aria-controls="cases-view" aria-pressed="true">案件管理</button>
+        <button type="button" id="show-settings" class="button secondary" aria-controls="settings-view" aria-pressed="false">系統設定</button>
+      </nav>
 
+      <div id="cases-view">
       <form class="toolbar" id="case-filter">
         <div class="field search">
           <label for="search">搜尋案件</label>
@@ -220,6 +248,7 @@
         <span class="subtle" id="row-count" role="status"></span>
       </div>
       <p class="warning" id="list-error" role="alert"></p>
+      <p class="warning" id="list-copy-error" role="alert"></p>
       <p class="status-text" id="save-announcement" role="status"></p>
       <div class="table-frame">
         <table id="case-table" aria-labelledby="list-title" role="table">
@@ -230,6 +259,7 @@
             <th scope="col" role="columnheader">聯絡電話</th>
             <th scope="col" role="columnheader">受騙金額</th>
             <th scope="col" role="columnheader">處理狀態</th>
+            <th scope="col" role="columnheader">甲方編號</th>
             <th scope="col" role="columnheader">案件操作</th>
           </tr></thead>
           <tbody id="cases" role="rowgroup"></tbody>
@@ -241,6 +271,63 @@
         <button type="button" class="button secondary" id="previous" disabled>上一頁</button>
         <button type="button" class="button secondary" id="next" disabled>下一頁</button>
       </nav>
+      </div>
+
+      <section id="settings-view" class="settings-grid" aria-labelledby="settings-title" hidden>
+        <h2 id="settings-title">系統設定</h2>
+        <p id="settings-load-status" class="subtle" role="status"></p>
+        <button type="button" id="retry-settings" class="button secondary" hidden>重新讀取設定</button>
+        <form id="site-settings-form" class="fields" novalidate>
+          <fieldset id="site-settings-fields" disabled>
+            <legend>LINE 官方帳號</legend>
+            <div class="field">
+              <label for="settings-line-url">LINE 連結</label>
+              <input id="settings-line-url" type="url" maxlength="500" placeholder="https://lin.ee/… 或 https://line.me/…" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="setting-actions">
+              <button type="button" class="button secondary" id="test-line-link">測試連結</button>
+            </div>
+            <p id="line-test-message" class="warning" role="alert"></p>
+          </fieldset>
+
+          <fieldset id="pixel-settings-fields" disabled>
+            <legend>廣告像素</legend>
+            <p class="subtle">可先儲存 Pixel ID 與啟用狀態。正式收件頁目前未啟用廣告追蹤。</p>
+            <p id="settings-total-cases" class="subtle"></p>
+            <div class="pixel-fields">
+              <section aria-labelledby="meta-title">
+                <h3 id="meta-title">Facebook／Meta Pixel</h3>
+                <div id="meta-pixels" class="pixel-list"></div>
+                <div class="setting-actions"><button type="button" id="add-meta" class="button secondary">新增 Meta Pixel</button></div>
+              </section>
+              <section aria-labelledby="tiktok-title">
+                <h3 id="tiktok-title">TikTok Pixel</h3>
+                <div id="tiktok-pixels" class="pixel-list"></div>
+                <div class="setting-actions"><button type="button" id="add-tiktok" class="button secondary">新增 TikTok Pixel</button></div>
+              </section>
+            </div>
+            <button type="submit" id="save-site-settings" class="button primary">儲存 LINE 與像素設定</button>
+          </fieldset>
+          <p id="site-save-error" class="warning" role="alert"></p>
+          <p id="site-save-status" class="status-text" role="status"></p>
+        </form>
+
+        <form id="partner-settings-form">
+          <fieldset id="partner-settings-fields" disabled>
+            <legend>甲方編號</legend>
+            <p class="subtle" id="current-partner-next"></p>
+            <div class="setting-actions">
+              <div class="field">
+                <label for="partner-next">下一個起始號</label>
+                <input type="number" id="partner-next" inputmode="numeric" min="1" max="9999" step="1" required>
+              </div>
+              <button type="submit" id="save-partner-next" class="button primary">儲存起始號</button>
+            </div>
+            <p id="partner-save-error" class="warning" role="alert"></p>
+            <p id="partner-save-status" class="status-text" role="status"></p>
+          </fieldset>
+        </form>
+      </section>
     </section>
   </main>
 
@@ -253,7 +340,21 @@
         <dt>稱呼</dt><dd id="detail-name"></dd>
         <dt>聯絡電話</dt><dd id="detail-phone"></dd>
         <dt>受騙金額</dt><dd id="detail-amount"></dd>
+        <dt>甲方編號</dt><dd id="detail-partner-number"></dd>
       </dl>
+      <section class="copy-summary" aria-label="交單資料">
+        <div class="field">
+          <label for="summary-preview">交單摘要預覽</label>
+          <textarea id="summary-preview" rows="3" readonly></textarea>
+          <p class="subtle" id="summary-hint" hidden>複製時會分配甲方編號。</p>
+        </div>
+        <div class="copy-actions">
+          <button type="button" id="detail-copy-partner" class="button secondary">複製甲方編號</button>
+          <button type="button" id="detail-copy-summary" class="button secondary">複製交單摘要</button>
+        </div>
+        <p id="detail-copy-error" class="warning" role="alert"></p>
+        <p id="detail-copy-status" class="status-text" role="status"></p>
+      </section>
       <div class="fields">
         <div class="field">
           <label for="case-status">處理狀態</label>
@@ -270,6 +371,16 @@
         <button type="submit" class="button primary" id="save">儲存</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="manual-copy" aria-labelledby="manual-copy-title">
+    <h2 id="manual-copy-title">手動複製</h2>
+    <p class="subtle" id="manual-copy-message"></p>
+    <div class="field" style="margin-top: 10px;">
+      <label for="manual-copy-text">複製內容</label>
+      <textarea id="manual-copy-text" rows="3" readonly></textarea>
+    </div>
+    <form method="dialog" class="dialog-actions"><button class="button primary">關閉</button></form>
   </dialog>
 
   <script>
@@ -289,7 +400,7 @@
         dateStyle: "short", timeStyle: "short", timeZone: "Asia/Taipei"
       });
       const tableName = "wei_quan_cases";
-      const columnNames = "id,case_number,created_at,name,phone,amount,status,note";
+      const columnNames = "id,case_number,created_at,name,phone,amount,status,note,partner_number";
       const loginPanel = byId("login-panel");
       const loginButton = byId("login-button");
       const loginMessage = byId("login-message");
@@ -306,14 +417,34 @@
       const caseStatus = byId("case-status");
       const note = byId("case-note");
       const closeEditor = byId("close-editor");
+      const siteSettingsForm = byId("site-settings-form");
+      const partnerSettingsForm = byId("partner-settings-form");
+      const lineInput = byId("settings-line-url");
+      const partnerNextInput = byId("partner-next");
+      const settingsView = byId("settings-view");
+      const settingsLoadStatus = byId("settings-load-status");
+      const retrySettings = byId("retry-settings");
+      const manualCopy = byId("manual-copy");
+      const manualCopyText = byId("manual-copy-text");
+      const detailCopyPartner = byId("detail-copy-partner");
+      const detailCopySummary = byId("detail-copy-summary");
+      const summaryPreview = byId("summary-preview");
       const caseDate = (value) => value ? dateFormat.format(new Date(value)) : "—";
       const isStaff = (user) => user?.app_metadata?.wei_quan_admin === true;
+      const pixelFormats = { meta: /^\d{8,20}$/, tiktok: /^[A-Z0-9]{8,32}$/ };
+      const rowCopyControls = new Map();
+      const cachedPartnerNumbers = new Map();
+      const pendingCopies = new Set();
 
       let staff = null;
       let cases = [];
       let selectedCase = null;
       let page = 0;
       let listRequest = 0;
+      let settingsReady = false;
+      let settingsBusy = false;
+      let partnerNext = null;
+      let partnerCounterRevision = 0;
 
       for (const [value, label] of Object.entries(statusNames)) {
         filterStatus.add(new Option(label, value));
@@ -345,21 +476,43 @@
 
       function clearWorkspace() {
         ++listRequest;
+        ++partnerCounterRevision;
         staff = null;
         cases = [];
         selectedCase = null;
         page = 0;
         body.replaceChildren();
+        rowCopyControls.clear();
+        cachedPartnerNumbers.clear();
+        pendingCopies.clear();
+        if (manualCopy.open) manualCopy.close();
+        manualCopyText.value = "";
+        settingsReady = false;
+        settingsBusy = false;
+        partnerNext = null;
+        siteSettingsForm.reset();
+        partnerSettingsForm.reset();
+        for (const platform of Object.keys(pixelFormats)) byId(platform + "-pixels").replaceChildren();
+        for (const id of ["settings-load-status", "line-test-message", "site-save-error", "site-save-status",
+          "partner-save-error", "partner-save-status", "current-partner-next", "settings-total-cases"]) {
+          byId(id).textContent = "";
+        }
+        retrySettings.hidden = true;
+        updateSettingsControls();
+        showView(false);
         workspace.hidden = true;
         logout.hidden = true;
         loginPanel.hidden = false;
         byId("operator").textContent = "";
+        byId("list-copy-error").textContent = "";
         byId("save-announcement").textContent = "";
         byId("login-form").reset();
         byId("case-filter").reset();
-        for (const id of ["detail-case-number", "detail-created-at", "detail-name", "detail-phone", "detail-amount"]) {
+        for (const id of ["detail-case-number", "detail-created-at", "detail-name", "detail-phone", "detail-amount",
+          "detail-partner-number", "detail-copy-error", "detail-copy-status"]) {
           byId(id).textContent = "";
         }
+        summaryPreview.value = "";
         byId("save-error").textContent = "";
         byId("editor-form").reset();
         if (editor.open) editor.close();
@@ -421,6 +574,218 @@
         }
       });
 
+      function showView(showSettings) {
+        byId("cases-view").hidden = showSettings;
+        settingsView.hidden = !showSettings;
+        byId("show-cases").setAttribute("aria-pressed", String(!showSettings));
+        byId("show-settings").setAttribute("aria-pressed", String(showSettings));
+        if (showSettings && !settingsReady) loadSettings();
+      }
+
+      function updateSettingsControls() {
+        const disabled = !settingsReady || settingsBusy;
+        for (const id of ["site-settings-fields", "pixel-settings-fields", "partner-settings-fields"]) {
+          byId(id).disabled = disabled;
+        }
+        retrySettings.disabled = settingsBusy;
+      }
+
+      function cleanLineUrl(input) {
+        const text = input.trim();
+        if (!/^https:\/\/(?:lin\.ee|line\.me)\/[^/?#]/i.test(text) || /[\s\u0000-\u001f\u007f\\]/u.test(text)) return null;
+        if (text.length > 500 || /@your_line_id/i.test(text)) return null;
+        try {
+          return new URL(text).href;
+        } catch {
+          return null;
+        }
+      }
+
+      function appendPixel(platform, pixel = {}) {
+        const name = platform === "meta" ? "Meta" : "TikTok";
+        const row = document.createElement("div");
+        row.className = "pixel-row";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = pixel.id ?? "";
+        input.maxLength = platform === "meta" ? 20 : 32;
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        if (platform === "meta") input.inputMode = "numeric";
+        input.setAttribute("aria-label", name + " Pixel ID");
+        input.placeholder = name + " Pixel ID";
+        const toggle = document.createElement("label");
+        toggle.className = "pixel-toggle";
+        const enabled = document.createElement("input");
+        enabled.type = "checkbox";
+        enabled.checked = pixel.enabled === true;
+        toggle.append(enabled, "啟用");
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "button secondary";
+        remove.textContent = "移除";
+        remove.setAttribute("aria-label", "移除 " + name + " Pixel");
+        remove.addEventListener("click", () => {
+          row.remove();
+          byId("add-" + platform).focus();
+        });
+        row.append(input, toggle, remove);
+        byId(platform + "-pixels").append(row);
+        return input;
+      }
+
+      function readPixels() {
+        const pixels = [];
+        for (const [platform, format] of Object.entries(pixelFormats)) {
+          const seen = new Set();
+          for (const row of byId(platform + "-pixels").children) {
+            const input = row.querySelector('input[type="text"]');
+            const id = input.value.trim().toUpperCase();
+            const platformName = platform === "meta" ? "Meta" : "TikTok";
+            if (!format.test(id) || seen.has(id)) {
+              input.focus();
+              const formatMessage = platform === "meta" ? "請輸入 8 至 20 位數字。" : "請輸入 8 至 32 位英文字母或數字。";
+              throw new Error(platformName + " Pixel ID " + (seen.has(id) ? "有重複項目。" : formatMessage));
+            }
+            seen.add(id);
+            pixels.push({ platform, id, enabled: row.querySelector('input[type="checkbox"]').checked });
+          }
+        }
+        return pixels;
+      }
+
+      function showSavedPartnerNext(value) {
+        if (value !== null && (!Number.isInteger(value) || value < 1 || value > 9999)) return;
+        const previous = partnerNext;
+        partnerNext = value;
+        const inputContainsPrevious = partnerNextInput.value === String(previous ?? "");
+        if (inputContainsPrevious) partnerNextInput.value = value ?? "";
+        byId("current-partner-next").textContent = value === null
+          ? "目前起始號之後沒有可用的編號。"
+          : "下一筆未編號的案件將分配 " + formatPartnerNumber(value) + "。";
+      }
+
+      function renderSiteSettings(data) {
+        lineInput.value = data.line_url ?? "";
+        for (const platform of Object.keys(pixelFormats)) byId(platform + "-pixels").replaceChildren();
+        for (const pixel of data.pixels) appendPixel(pixel.platform, pixel);
+        byId("settings-total-cases").textContent = "成功收件共 " + data.total_cases + " 筆。";
+      }
+
+      async function loadSettings() {
+        if (!staff || settingsBusy) return;
+        const activeStaff = staff;
+        settingsBusy = true;
+        settingsLoadStatus.textContent = "載入設定中⋯";
+        retrySettings.hidden = true;
+        updateSettingsControls();
+        try {
+          const { data, error } = await client.rpc("get_wei_quan_admin_settings");
+          if (staff !== activeStaff) return;
+          if (error || !data || !Array.isArray(data.pixels)) throw new Error("settings unavailable");
+          renderSiteSettings(data);
+          showSavedPartnerNext(data.partner_next);
+          settingsReady = true;
+          settingsLoadStatus.textContent = "";
+        } catch {
+          if (staff !== activeStaff) return;
+          settingsLoadStatus.textContent = "無法讀取設定。請稍候重新讀取。";
+          retrySettings.hidden = false;
+        } finally {
+          if (staff === activeStaff) {
+            settingsBusy = false;
+            updateSettingsControls();
+          }
+        }
+      }
+
+      byId("show-cases").addEventListener("click", () => showView(false));
+      byId("show-settings").addEventListener("click", () => showView(true));
+      retrySettings.addEventListener("click", loadSettings);
+      for (const platform of Object.keys(pixelFormats)) {
+        byId("add-" + platform).addEventListener("click", () => appendPixel(platform).focus());
+      }
+      lineInput.addEventListener("input", () => { byId("line-test-message").textContent = ""; });
+      byId("test-line-link").addEventListener("click", () => {
+        const url = cleanLineUrl(lineInput.value);
+        byId("line-test-message").textContent = url ? "" : "請輸入有效的 LINE 官方帳號連結。";
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      });
+
+      siteSettingsForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!staff || !settingsReady || settingsBusy) return;
+        const activeStaff = staff;
+        const errorMessage = byId("site-save-error");
+        const status = byId("site-save-status");
+        errorMessage.textContent = "";
+        status.textContent = "";
+        const rawLineUrl = lineInput.value.trim();
+        const lineUrl = rawLineUrl ? cleanLineUrl(rawLineUrl) : null;
+        if (rawLineUrl && !lineUrl) {
+          errorMessage.textContent = "請輸入有效的 LINE 官方帳號連結。";
+          lineInput.focus();
+          return;
+        }
+        let pixels;
+        try {
+          pixels = readPixels();
+        } catch (error) {
+          errorMessage.textContent = error.message;
+          return;
+        }
+        settingsBusy = true;
+        updateSettingsControls();
+        status.textContent = "儲存中⋯";
+        try {
+          const { data, error } = await client.rpc("save_wei_quan_admin_settings", { p_line_url: lineUrl, p_pixels: pixels });
+          if (staff !== activeStaff) return;
+          if (error || !data || !Array.isArray(data.pixels)) throw new Error("save failed");
+          renderSiteSettings(data);
+          status.textContent = "已儲存 LINE 與像素設定。";
+        } catch {
+          if (staff !== activeStaff) return;
+          status.textContent = "";
+          errorMessage.textContent = "無法儲存設定。請稍候再試。";
+        } finally {
+          if (staff === activeStaff) {
+            settingsBusy = false;
+            updateSettingsControls();
+          }
+        }
+      });
+
+      partnerSettingsForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!staff || !settingsReady || settingsBusy || !partnerSettingsForm.reportValidity()) return;
+        const activeStaff = staff;
+        const errorMessage = byId("partner-save-error");
+        const status = byId("partner-save-status");
+        errorMessage.textContent = "";
+        status.textContent = "儲存中⋯";
+        settingsBusy = true;
+        ++partnerCounterRevision;
+        updateSettingsControls();
+        try {
+          const { data, error } = await client.rpc("set_wei_quan_partner_next", { p_next: partnerNextInput.valueAsNumber });
+          if (staff !== activeStaff) return;
+          if (error || (data !== null && !Number.isInteger(data))) throw new Error("save failed");
+          showSavedPartnerNext(data);
+          partnerNextInput.value = data ?? "";
+          status.textContent = "已儲存起始號。";
+        } catch {
+          if (staff !== activeStaff) return;
+          status.textContent = "";
+          errorMessage.textContent = "無法儲存起始號。請稍候再試。";
+        } finally {
+          if (staff === activeStaff) {
+            ++partnerCounterRevision;
+            settingsBusy = false;
+            updateSettingsControls();
+          }
+        }
+      });
+
       async function loadCases() {
         if (!staff) return;
         const sequence = ++listRequest;
@@ -459,6 +824,9 @@
             return;
           }
           cases = data ?? [];
+          for (const record of cases) {
+            if (cachedPartnerNumbers.has(record.id)) record.partner_number = cachedPartnerNumbers.get(record.id);
+          }
           renderRows();
           countLabel.textContent = "共 " + (count ?? cases.length) + " 筆";
           byId("pagination").textContent = "第 " + (page + 1) + "／" + pages + " 頁";
@@ -469,6 +837,7 @@
         } catch {
           if (!staff || sequence !== listRequest) return;
           cases = [];
+          rowCopyControls.clear();
           body.replaceChildren();
           countLabel.textContent = "";
           byId("pagination").textContent = "";
@@ -486,8 +855,109 @@
         return td;
       }
 
+      function formatPartnerNumber(value) {
+        return Number.isInteger(value) && value >= 1 && value <= 9999 ? String(value).padStart(2, "0") : "";
+      }
+
+      function copySummaryText(record, partnerNumber) {
+        return [
+          "甲方編號：" + (formatPartnerNumber(partnerNumber) || "尚未分配"),
+          "案件類型：網路詐騙維權",
+          "受騙金額區間：" + record.amount
+        ].join("\n");
+      }
+
+      function refreshCopyControls(record) {
+        const assignedNumber = cachedPartnerNumbers.get(record.id) ?? record.partner_number;
+        const label = formatPartnerNumber(assignedNumber) || "尚未分配";
+        const pending = pendingCopies.has(record.id);
+        const rowControls = rowCopyControls.get(record.id);
+        if (rowControls) {
+          rowControls.number.textContent = label;
+          rowControls.button.disabled = pending;
+          rowControls.button.textContent = pending ? "處理中⋯" : "複製甲方編號";
+        }
+        if (selectedCase?.id === record.id) {
+          byId("detail-partner-number").textContent = label;
+          summaryPreview.value = copySummaryText(record, assignedNumber);
+          byId("summary-hint").hidden = Boolean(assignedNumber);
+          detailCopyPartner.disabled = pending;
+          detailCopySummary.disabled = pending;
+        }
+      }
+
+      function startClipboardWrite(textPromise, immediateText) {
+        const clipboard = navigator.clipboard;
+        if (!clipboard?.writeText) return Promise.resolve(false);
+        const simpleWrite = () => textPromise.then((text) => clipboard.writeText(text));
+        if (!immediateText && window.ClipboardItem && clipboard.write) {
+          try {
+            const blob = textPromise.then((text) => new Blob([text], { type: "text/plain" }));
+            blob.catch(() => {});
+            return clipboard.write([new ClipboardItem({ "text/plain": blob })]).catch(simpleWrite).then(() => true, () => false);
+          } catch {
+            return simpleWrite().then(() => true, () => false);
+          }
+        }
+        return (immediateText ? clipboard.writeText(immediateText) : simpleWrite()).then(() => true, () => false);
+      }
+
+      async function copyCaseData(record, summary, inEditor) {
+        if (!staff || pendingCopies.has(record.id)) return;
+        const activeStaff = staff;
+        const counterRevision = partnerCounterRevision;
+        const status = byId(inEditor ? "detail-copy-status" : "save-announcement");
+        const errorMessage = byId(inEditor ? "detail-copy-error" : "list-copy-error");
+        const currentNumber = cachedPartnerNumbers.get(record.id) ?? record.partner_number;
+        const makeText = (number) => summary ? copySummaryText(record, number) : formatPartnerNumber(number);
+        const current = () => staff === activeStaff && (!inEditor || selectedCase?.id === record.id);
+        status.textContent = "";
+        errorMessage.textContent = "";
+        pendingCopies.add(record.id);
+        refreshCopyControls(record);
+
+        async function assignNumber() {
+          const { data, error } = await client.rpc("assign_wei_quan_partner_number", { p_case_id: record.id });
+          if (staff !== activeStaff || error || !formatPartnerNumber(data?.partner_number)) throw new Error("assignment failed");
+          cachedPartnerNumbers.set(record.id, data.partner_number);
+          if (settingsReady && counterRevision === partnerCounterRevision &&
+              (data.partner_next === null || (partnerNext !== null && data.partner_next >= partnerNext))) {
+            showSavedPartnerNext(data.partner_next);
+          }
+          refreshCopyControls(record);
+          return makeText(data.partner_number);
+        }
+
+        const immediateText = formatPartnerNumber(currentNumber) ? makeText(currentNumber) : "";
+        const textPromise = immediateText ? Promise.resolve(immediateText) : assignNumber();
+        const clipboardWrite = startClipboardWrite(textPromise, immediateText);
+        try {
+          const text = await textPromise;
+          const copied = await clipboardWrite;
+          if (!current()) return;
+          if (copied) {
+            const number = formatPartnerNumber(cachedPartnerNumbers.get(record.id) ?? currentNumber);
+            status.textContent = summary ? "已複製交單摘要（甲方編號 " + number + "）。" : "已複製甲方編號 " + number + "。";
+          } else {
+            byId("manual-copy-message").textContent = "請複製下方已選取的文字。";
+            manualCopyText.value = text;
+            if (!manualCopy.open) manualCopy.showModal();
+            manualCopyText.focus();
+            manualCopyText.select();
+          }
+        } catch {
+          if (current()) errorMessage.textContent = "無法分配甲方編號，請確認起始號設定後再試。";
+        } finally {
+          if (staff === activeStaff) {
+            pendingCopies.delete(record.id);
+            refreshCopyControls(record);
+          }
+        }
+      }
+
       function renderRows() {
         body.replaceChildren();
+        rowCopyControls.clear();
         for (const record of cases) {
           const row = document.createElement("tr");
           row.setAttribute("role", "row");
@@ -506,14 +976,26 @@
           statusCell.append(badge);
           const actions = makeCell("案件操作", "");
           actions.className = "row-actions";
+          const actionButtons = document.createElement("div");
+          actionButtons.className = "row-action-buttons";
           const button = document.createElement("button");
           button.type = "button";
           button.className = "button secondary table-button";
           button.textContent = "編輯案件";
           button.setAttribute("aria-label", "編輯案件 " + record.case_number);
           button.addEventListener("click", () => openEditor(record));
-          actions.append(button);
-          row.append(statusCell, actions);
+          const copyButton = document.createElement("button");
+          copyButton.type = "button";
+          copyButton.className = "button secondary table-button";
+          copyButton.setAttribute("aria-label", "複製甲方編號，案件 " + record.case_number);
+          copyButton.addEventListener("click", () => copyCaseData(record, false, false));
+          actionButtons.append(button, copyButton);
+          actions.append(actionButtons);
+          const partnerCell = makeCell("甲方編號", "");
+          partnerCell.className = "tabular";
+          rowCopyControls.set(record.id, { number: partnerCell, button: copyButton });
+          refreshCopyControls(record);
+          row.append(statusCell, partnerCell, actions);
           body.append(row);
         }
       }
@@ -528,8 +1010,19 @@
         caseStatus.value = record.status;
         note.value = record.note ?? "";
         byId("save-error").textContent = "";
+        byId("detail-copy-error").textContent = "";
+        byId("detail-copy-status").textContent = "";
+        refreshCopyControls(record);
         editor.showModal();
       }
+
+      detailCopyPartner.addEventListener("click", () => {
+        if (selectedCase) copyCaseData(selectedCase, false, true);
+      });
+      detailCopySummary.addEventListener("click", () => {
+        if (selectedCase) copyCaseData(selectedCase, true, true);
+      });
+      manualCopy.addEventListener("close", () => { manualCopyText.value = ""; });
 
       byId("case-filter").addEventListener("submit", (event) => {
         event.preventDefault();
@@ -548,6 +1041,7 @@
       editor.addEventListener("close", () => {
         selectedCase = null;
         byId("editor-form").reset();
+        summaryPreview.value = "";
         byId("save-error").textContent = "";
       });
 
