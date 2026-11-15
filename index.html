@@ -154,7 +154,7 @@
               </div>
               <div>
                 <label for="phone">聯絡電話</label>
-                <input class="control" id="phone" name="phone" type="tel" placeholder="台灣手機號碼（如 0912-345-678）" maxlength="24" autocomplete="tel" required>
+                <input class="control" id="phone" name="phone" type="tel" autocomplete="tel" required>
               </div>
               <div>
                 <label for="amount">受騙金額（新台幣）</label>
@@ -187,7 +187,7 @@
             <h2 id="steps-title">三步驟申請維權評估</h2>
             <ol>
               <li>填寫稱呼、聯絡電話與受騙金額。</li>
-              <li>取得編號後，依成功頁的聯絡方式聯繫。</li>
+              <li>取得編號後，加入 LINE 並傳送案件編號。</li>
               <li>整理匯款憑證與對話紀錄，供後續求償評估。</li>
             </ol>
           </section>
@@ -205,10 +205,14 @@
           <button id="copy-button" class="button copy" type="button">複製編號</button>
         </div>
         <p id="copy-status" class="copy-status" role="status"></p>
-        <a id="line-link" class="button line-button motion-safe:transition-colors" rel="noreferrer" hidden>
-          <span class="line-mark" aria-hidden="true">LINE</span> 加入 LINE 傳送編號
+        <a id="line-link" class="button line-button motion-safe:transition-colors" target="_blank" rel="noopener noreferrer" hidden>
+          <span class="line-mark" aria-hidden="true">LINE</span> 複製編號並加入 LINE
         </a>
-        <p id="phone-help" class="status-help" hidden>需要立即諮詢時，可撥打 <a href="tel:165">165 反詐騙諮詢專線</a>。</p>
+        <div id="line-unavailable" hidden>
+          <p id="line-status" class="status-help" role="status">暫時無法取得 LINE 連結，請保留案件編號。</p>
+          <button id="retry-line" class="button copy" type="button">重新載入 LINE 連結</button>
+        </div>
+        <p class="status-help">請保留匯款憑證、交易明細與對話紀錄。</p>
       </div>
     </section>
   </main>
@@ -230,6 +234,7 @@
       apiKey.startsWith("sb_publishable_");
     const byId = (id) => document.getElementById(id);
     const form = byId("intake-form");
+    const applicantName = byId("name");
     const button = byId("submit-button");
     const label = byId("submit-label");
     const error = byId("submit-error");
@@ -241,9 +246,7 @@
     byId("receipt-info").hidden = hasEndpoint;
     button.disabled = !hasEndpoint;
 
-    for (const input of form.querySelectorAll("input")) {
-      input.addEventListener("input", () => input.setCustomValidity(""));
-    }
+    applicantName.addEventListener("input", () => applicantName.setCustomValidity(""));
 
     function installMetaPixel() {
       if (typeof window.fbq === "function") return window.fbq;
@@ -329,28 +332,30 @@
           return url.href;
         }
       } catch {
-        // 收件成功時，若暫時無法取得 LINE 設定，仍顯示案件編號和 165。
+        // 連結取得失敗時，成功頁仍會顯示案件編號以及重試按鈕。
       }
       return "";
+    }
+
+    function updateLineGuidance(lineLink) {
+      const action = byId("line-link");
+      if (lineLink) action.href = lineLink;
+      else action.removeAttribute("href");
+      action.hidden = !lineLink;
+      byId("line-unavailable").hidden = Boolean(lineLink);
+      byId("success-guidance").textContent = lineLink
+        ? "點擊下方按鈕複製案件編號並加入 LINE。進入聊天室後，請貼上並送出編號，讓專員接續處理。"
+        : "已收到您的資料，請先複製並保留案件編號。";
     }
 
     async function showSuccess(caseNumber, lineLink) {
       const intake = byId("intake-view");
       const view = byId("success-view");
       const title = byId("success-title");
-      const guidance = byId("success-guidance");
       title.textContent = "您的維權專案已建檔！";
       byId("case-number").textContent = caseNumber;
       view.classList.add("received");
-      guidance.textContent = "已收到您的資料。請先保留匯款憑證、交易明細與對話紀錄。";
-      if (lineLink) {
-        const lineInstruction = document.createElement("strong");
-        lineInstruction.textContent = " 請加入 LINE 官方帳號，並傳送下方編號以便後續聯絡。";
-        guidance.append(lineInstruction);
-        byId("line-link").href = lineLink;
-      }
-      byId("line-link").hidden = !lineLink;
-      byId("phone-help").hidden = Boolean(lineLink);
+      updateLineGuidance(lineLink);
 
       intake.classList.add("leaving");
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) await wait(200);
@@ -370,19 +375,11 @@
       if (!hasEndpoint || button.disabled) return;
       error.hidden = true;
 
-      for (const input of form.querySelectorAll("input")) {
-        input.value = input.value.trim();
-        input.setCustomValidity(input.value ? "" : "請填寫此欄位。");
-      }
-      const phone = byId("phone");
-      const digits = phone.value.normalize("NFKC").replace(/[\s()-]/g, "");
-      if (phone.value && !/^(?:09|\+8869)\d{8}$/.test(digits)) {
-        phone.setCustomValidity("請輸入有效的台灣手機號碼，例如 0912-345-678。");
-      }
+      applicantName.value = applicantName.value.trim();
+      applicantName.setCustomValidity(applicantName.value ? "" : "請填寫此欄位。");
       if (!form.reportValidity()) return;
 
       const data = Object.fromEntries(new FormData(form));
-      data.phone = digits.replace(/^\+886/, "0");
       const snapshot = JSON.stringify(data);
       if (pending?.snapshot !== snapshot) {
         pending = { snapshot, requestId: crypto.randomUUID() };
@@ -419,7 +416,7 @@
       await showSuccess(caseNumber, configuredLineLink);
     });
 
-    byId("copy-button").addEventListener("click", async () => {
+    async function copyCaseNumber() {
       const number = byId("case-number");
       const status = byId("copy-status");
       try {
@@ -435,6 +432,21 @@
         try { copied = document.execCommand("copy"); } catch {}
         status.textContent = copied ? "已複製編號" : "已選取編號，請手動複製。";
       }
+    }
+
+    byId("copy-button").addEventListener("click", copyCaseNumber);
+    byId("line-link").addEventListener("click", copyCaseNumber);
+    const retryLine = byId("retry-line");
+    retryLine.addEventListener("click", async () => {
+      retryLine.disabled = true;
+      const status = byId("line-status");
+      const previousStatus = status.textContent;
+      status.textContent = "正在載入 LINE 連結…";
+      const lineLink = await loadLineLink();
+      updateLineGuidance(lineLink);
+      status.textContent = previousStatus;
+      retryLine.disabled = false;
+      if (lineLink) byId("line-link").focus();
     });
   </script>
 </body>
